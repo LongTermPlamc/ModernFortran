@@ -6,3 +6,4 @@
 *.o
 *.mod
 stock-prices
+*.csv
