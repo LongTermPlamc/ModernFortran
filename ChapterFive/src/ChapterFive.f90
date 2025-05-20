@@ -3,142 +3,97 @@ module ChapterFive
   implicit none
   private
 
-  public :: say_hello, readStock, alloc, free, reverse, mean, std, movingAverage, movingStd, writeStock
+  public :: readStock, alloc, myfree, num_records, reverse!!, mean, std, movingAverage, movingStd, writeStock
 contains
-  subroutine say_hello
-    print *, "Hello, ChapterFive!"
-  end subroutine say_hello
+  !! This function just parses the file until EOF and records how many lines are there.
+  integer function num_records(filename) 
+  character(len=*), intent(in):: filename
+  integer :: fileunit
 
-  subroutine readStock(filename, time, open, high, low, close,adjclose, volume)
-    character(*), intent(in):: filename
-    character(:),allocatable, intent(inout):: time(:)
-    real, allocatable, intent(inout) ::open(:),high(:),low(:),close(:),adjclose(:), volume(:)
+  open(newunit=fileunit, file=filename)
+  num_records = 0
+  do
+    read(unit=fileunit, fmt=*, end=1) !! This end = 1 enable the program to jump to line labeled with 1 when EOF is reached.
+    num_records = num_records+1
+  end do
+  1 continue
+  close(unit=fileunit)
 
-    integer :: fileUnit
-    integer :: n, nm
+  end function num_records
 
-    nm = numRecords(filename)-1
-
-    if (allocated(time)) deallocate(time)
-    allocate(character(10) :: time(nm))
-    call alloc(open, nm)
-    call alloc(high, nm)
-    call alloc(low, nm)
-    call alloc(close, nm)
-    call alloc(adjclose, nm)
-    call alloc(volume, nm)
-
-    open(newunit = fileUnit, file=filename)
-    read(fileUnit, fmt=*, end=1)
-
-    do n = 1, nm
-      read(fileUnit, fmt=*, end=1) &
-            time(n), open(n), high(n), low(n), close(n), adjclose(n),volume(n)
-    end do
-
-    1 close(fileUnit)
+  !! This function reads the file "filename" and stores each column in a diferent array. 
+  subroutine readStock(filename, time, open, high, &
+                       low, close, adjclose, volume)
+  
+  character(*), intent(in) :: filename
+  character(:), allocatable, intent(inout) :: time(:)
+  real, allocatable, intent(inout):: open(:), &
+  high(:), low(:), close(:), adjclose(:), volume(:)
+  integer :: fileunit
+  integer :: n, nm
+  
+  !! Counts how many lines has the file. doesn't count the header. 
+  nm = num_records(filename)-1
+  
+  !! Allocates the arrays to the found number of records. 
+  if (allocated(time)) deallocate(time)
+  allocate(character(10):: time(nm))
+  call alloc(open, nm)
+  call alloc(high, nm)
+  call alloc(low, nm)
+  call alloc(close, nm)
+  call alloc(adjclose, nm)
+  call alloc(volume, nm)
+  
+  !! Opens the file again and reads each line storing each element into the nth position
+  open(newunit=fileunit, file=filename)
+  read(fileunit, fmt=*, end=1) !! When EOF is reached, it jumps to close the file
+  do n=1, nm
+    read(fileunit, fmt=*, end=1) time(n), open(n), &
+    high(n), low(n), close(n), adjclose(n), volume(n)
+  end do
+  
+  1 close(fileunit)
 
   end subroutine readStock
 
-  subroutine writeStock(filename, time, price, movAverage, movStdDev)
-    character(*), intent(in) :: filename
-    character(len=:), allocatable, intent(in) :: time(:)
-    real, intent(in) :: price(:), movAverage(:), movStdDev(:)
-    integer ::newUnit, index
-
-    open(newUnit, file=filename, action='write')
-
-    do index =1, size(time)
-      write(newUnit, *) time(index), price(index),movAverage(index),movStdDev(index)
-    end do
-    close(newUnit)
-
-  end subroutine
-
-  integer function numRecords(fileName)
-    character(len=*), intent(in) :: fileName
-    integer :: fileUnit
-    open(newunit=fileUnit, file=fileName)
-    numRecords = 0
-    do
-      read(unit=fileUnit, fmt=*, end=1)
-      numRecords = numRecords + 1
-    end do
-    1 continue
-    close(unit=fileUnit)
-  end function numRecords
-
-  subroutine alloc(a, arrSize)
+  !! function to allocate the array a to have n elements
+  subroutine alloc(a, n)
     real, allocatable, intent(inout) :: a(:)
-    integer :: arrSize
-    integer:: stat
+    integer, intent(in):: n
+    integer :: stat
     character(len=100) :: errmsg
 
-    if (allocated(a)) call free(a)
-    allocate(a(arrSize), stat=stat, errmsg=errmsg)
-    if(stat > 0) error stop errmsg
+    if (allocated(a)) call myfree(a) !! if allocated, free memory
+    allocate(a(n), stat= stat, errmsg=errmsg) !! allocate storing status in stat and erromsg in errmsg
+    if (stat>0) error stop errmsg !! if status is not success, stop execution.
 
   end subroutine alloc
 
-  subroutine free(a)
-    real, allocatable, intent(inout):: a(:)
-    integer:: stat
+  !! free memory of an allocated array
+  subroutine myfree(a)
+    real, allocatable, intent(inout) :: a(:)
+    integer :: stat
     character(len=100):: errmsg
 
-    if(.not. allocated(a)) return
-    deallocate(a, stat=stat, errmsg=errmsg)
-    if (stat>0) then
-      error stop errmsg
-    end if
+    if (.not. allocated(a)) return !! if array is not allocated nothing happens
+    deallocate(a, stat=stat, errmsg = errmsg) !! else, deallocates storing stat an errmsg
+    if (stat>0) error stop errmsg
 
-  end subroutine free
+  end subroutine myfree
 
-  pure function reverse(a)
-    real, intent(in):: a(:)
-    real :: reverse(size(a))
-    reverse = a(size(a):1:-1)
+  function reverse(arr)
+    real, allocatable, intent(in):: arr(:)
+    real, allocatable :: reverse(:)
+    integer i, ln
+
+    ln = size(arr)
+    allocate(reverse(ln))
+    
+    do i = 1, ln
+      reverse(i) = arr(ln+1-i)
+    end do
+
   end function reverse
-
-  pure function mean(a)
-    real, intent(in) :: a(:)
-    real:: mean
-
-    mean = sum(a) / size(a)
-  end function mean
-
-  pure real function std(a)
-    real, intent(in) :: a(:)
-    real :: tempMean
-
-    tempMean = mean(a)
-
-    std = sqrt(mean((a-tempMean) ** 2)) 
-
-  end function std
-
-  function movingAverage(a, win)
-    real, intent(in) :: a(:)
-    integer, intent(in) :: win
-    real :: movingAverage(size(a))
-    integer :: i, winSize
-
-    do i = 1, size(a)
-      winSize = max(i-win,1)
-      movingAverage(i) = mean(a(winSize:i))
-    end do
-  end function movingAverage
-
-  function movingStd(a, win)
-    real, intent(in) :: a(:)
-    integer, intent(in) :: win
-    real :: movingStd(size(a))
-    integer :: i, winSize
-
-    do i = 1, size(a)
-      winSize = max(i-win,1)
-      movingStd(i) = std(a(winSize:i))
-    end do
-  end function movingStd
-
 
 end module ChapterFive
