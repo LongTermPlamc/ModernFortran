@@ -3,7 +3,7 @@ module ChapterFive
   implicit none
   private
 
-  public :: readStock, alloc, myfree, num_records, reverse!!, mean, std, movingAverage, movingStd, writeStock
+  public :: readStock, alloc, myfree, num_records, reverse, average, std, movingAverage, movingStd !!writeStock
 contains
   !! This function just parses the file until EOF and records how many lines are there.
   integer function num_records(filename) 
@@ -95,5 +95,55 @@ contains
     end do
 
   end function reverse
+
+  pure real function average(array)
+  
+  real, intent(in):: array(:)
+
+  average = sum(array)/size(array)
+
+  end function average
+
+  pure real function std(array)
+  real, intent(in) :: array(:)
+
+  std = sqrt(average((array-average(array))**2))
+  end function std
+
+  function movingAverage(array, window)
+  real, intent(in) :: array(:)
+  integer, intent(in) :: window
+  real, allocatable :: movingAverage(:)
+  integer :: length, i, upBound, lowBound
+
+  length = size(array)
+
+  call alloc(movingAverage, length)
+
+  do i=1, length
+    upBound = i
+    lowBound = max(1,i-window+1)
+    movingAverage(i) = average( array(lowBound:upBound) )
+  end do
+
+  end function movingAverage
+
+  function movingStd(array, window)
+  real, intent(in) :: array(:)
+  integer, intent(in) :: window
+  real, allocatable :: movingStd(:)
+  integer :: length, i, upBound, lowBound
+
+  length = size(array)
+
+  call alloc(movingStd, length)
+
+  do i=1, length
+    upBound = i
+    lowBound = max(1,i-window+1)
+    movingStd(i) = std( array(lowBound:upBound) )
+  end do
+
+  end function movingStd
 
 end module ChapterFive
