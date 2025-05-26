@@ -15,7 +15,7 @@ program stockGain
 
   do n = 1, size(symbols)
 
-    filename = "myData\" // trim(symbols(n)) //".csv"
+    filename = "./data/" // trim(symbols(n)) //".csv"
 
     call readStock(filename, time, open, high, low, close, adjclose, volume)
     adjclose = reverse(adjclose)

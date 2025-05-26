@@ -3,7 +3,7 @@ module ChapterFive
   implicit none
   private
 
-  public :: readStock, alloc, myfree, num_records, reverse, average, std, movingAverage, movingStd !!writeStock
+  public :: readStock, alloc, myfree, num_records, reverse, average, std, movingAverage, movingStd, writeStock
 contains
   !! This function just parses the file until EOF and records how many lines are there.
   integer function num_records(filename) 
@@ -49,8 +49,7 @@ contains
   open(newunit=fileunit, file=filename)
   read(fileunit, fmt=*, end=1) !! When EOF is reached, it jumps to close the file
   do n=1, nm
-    read(fileunit, fmt=*, end=1) time(n), open(n), &
-    high(n), low(n), close(n), adjclose(n), volume(n)
+    read(fileunit, fmt=*, end=1) time(n), open(n), high(n), low(n), close(n), adjclose(n), volume(n)
   end do
   
   1 close(fileunit)
@@ -143,7 +142,27 @@ contains
     lowBound = max(1,i-window+1)
     movingStd(i) = std( array(lowBound:upBound) )
   end do
-
   end function movingStd
+
+  subroutine writeStock(filename, time, adjClose, movAverage, movStd)
+    character(*), intent(in):: filename
+    character(:), intent(in), allocatable :: time(:)
+    real, intent(in), allocatable:: adjClose(:),movAverage(:), movStd(:)
+
+    integer :: len, i, fileunit
+    character(40) :: frmt
+
+    frmt = "(A10,f12.6,f12.6,f12.6)"
+
+    open(newunit=fileunit, file=filename)
+
+    len = size(time)
+    do i = 1, len
+      write(unit =fileunit, fmt= trim(frmt)) time(i), adjClose(i),movAverage(i), movStd(i)
+    end do
+    
+    close(fileunit)
+
+  end subroutine writeStock
 
 end module ChapterFive
