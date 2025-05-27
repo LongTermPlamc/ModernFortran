@@ -3,7 +3,7 @@ module ChapterFive
   implicit none
   private
 
-  public :: readStock, alloc, myfree, num_records, reverse, average, std, movingAverage, movingStd, writeStock
+  public :: readStock, alloc, myfree, num_records, reverse, average, std, movingAverage, movingStd, writeStock, crossPoss, crossNeg
 contains
   !! This function just parses the file until EOF and records how many lines are there.
   integer function num_records(filename) 
@@ -164,5 +164,45 @@ contains
     close(fileunit)
 
   end subroutine writeStock
+
+  function crossPoss(x, w) result (res)
+    real, intent(in):: x(:)
+    integer, intent(in) :: w
+    integer, allocatable :: res(:)
+    logical, allocatable :: greaterThan(:), lessThan(:)
+    real, allocatable :: mvgAvg(:), mvgStd(:)
+    integer :: i
+
+    allocate(res(size(x-2)), mvgAvg(size(x)), mvgStd(size(x)))
+    allocate(greaterThan(size(x)), lessThan(size(x)))
+
+    res= [(i, i =2, size(x))]
+    greaterThan = x > movingAverage(x, w)
+    lessThan = x < movingAverage(x, w)
+
+    res = pack(res, greaterThan(2:) .and. lessThan(:size(x)-1))
+    deallocate(mvgAvg, mvgStd)
+
+  end function crossPoss
+
+  function crossNeg(x, w) result (res)
+    real, intent(in):: x(:)
+    integer, intent(in) :: w
+    integer, allocatable :: res(:)
+    logical, allocatable :: greaterThan(:), lessThan(:)
+    real, allocatable :: mvgAvg(:), mvgStd(:)
+    integer :: i
+
+    allocate(res(size(x-2)), mvgAvg(size(x)), mvgStd(size(x)))
+    allocate(greaterThan(size(x)), lessThan(size(x)))
+
+    res= [(i, i =2, size(x))]
+    greaterThan = x > movingAverage(x, w)
+    lessThan = x < movingAverage(x, w)
+
+    res = pack(res, lessThan(2:) .and. greaterThan(:size(x)-1))
+    deallocate(mvgAvg, mvgStd)
+
+  end function crossNeg
 
 end module ChapterFive

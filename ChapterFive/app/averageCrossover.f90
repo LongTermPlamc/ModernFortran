@@ -8,34 +8,38 @@ program averageCrossover
     real            , allocatable :: open(:), high(:), low(:), &
                                     close(:), adjclose(:), volume(:)
     real            , allocatable :: movAverage(:), movStd(:)
-    logical         , allocatable :: greaterThan(:), lessThan(:)
-    integer, allocatable::res(:)
-    integer :: m, n, i
+    integer, allocatable::buy(:), sell(:)
+    integer :: m, n, i, newUnit
 
     symbols = ['AAPL', 'AMZN', 'CRAY', 'CSCO', 'HPQ ', &
              'IBM ', 'INTC', 'MSFT', 'NVDA', 'ORCL']
 
-    do i = 1, 1
+    do i = 1, size(symbols)
 
-        filename = "./data/"//trim(symbols(i))//".csv"
+        filename = ".\myData\"//trim(symbols(i))//".csv"
         call readStock(filename,time, open, high, low, close, adjclose, volume)
+
+        allocate(buy(size(time)), sell(size(time)))
 
         time = time(size(time):1:-1)
         adjclose = reverse(adjclose)
-        movAverage = movingAverage(adjclose, 30)
-        allocate(greaterThan(size(time)))
-        allocate(lessThan(size(time)))
-        allocate(res(size(time)))
 
-        greaterThan = adjclose > movAverage
-        lessThan = adjclose < movAverage
+        buy = crossPoss(adjClose, 30)
+        sell = crossNeg(adjClose, 30)
 
-        res = pack(adjclose(2:),greaterThan(2:).and. lessThan(:size(time)-1))
+        newFileName = ".\myData\"//trim(symbols(i))//"_buyAndSell.txt"
+        open(newunit = newUnit, file = newFileName)
+        do m = 1, size(buy)
+            write(newUnit,*) "Buy", "     ", time(buy(m))
+        end do
+        do m = 1, size(sell)
+            write(newUnit,*) "Sell", "     ", time(sell(m))
+        end do
+        close(newUnit)
 
-        print*, res
+        deallocate(buy, sell)
 
-       
-        deallocate(greaterThan,lessThan,res)
+    
     end do
 
 
