@@ -1,6 +1,8 @@
 program main
-  use ChapterSix, only: say_hello
+  !!use ChapterSix, only: say_hello
   implicit none
-
-  call say_hello()
+  character(len=1000):: message
+  read*, message
+  print*, trim(message)
+  
 end program main
