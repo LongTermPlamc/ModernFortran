@@ -17,9 +17,9 @@
 !  call execute_command_line("python --version")
 
  !plot it:
- call plt%initialize(grid=.true.,xlabel='angle (rad)',&
-                     title='Plot of $\sin(x)$',legend=.true.)
- call plt%add_plot(x,sx,label='$\sin(x)$',linestyle='b-o',markersize=5,linewidth=2)
- call plt%savefig('sinx.png', pyfile='sinx.py')
+!  call plt%initialize(grid=.true.,xlabel='angle (rad)',&
+!                      title='Plot of $\\sin(x)$',legend=.true.)
+!  call plt%add_plot(x,sx,label='$\\sin(x)$',linestyle='b-o',markersize=5,linewidth=2)
+!  call plt%savefig('sinx.png', pyfile='sinx.py')
 
  end program pyPlotTest
