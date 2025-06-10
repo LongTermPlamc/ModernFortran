@@ -4,41 +4,42 @@ module ChapterSeven
   implicit none
   private
 
-  public :: readData
+  public :: readData, denan
 contains
-  subroutine readData(filename, len, time, wind_speed, &
-                      air_pressure, air_temp, dew, water_temp, &
-                      wave_height, wave_period)
+  subroutine readData(filename, time, wind_speed)
     character(*), intent(in) :: filename
-    integer, intent(out) :: len
     character(*), intent(inout),allocatable :: time(:)
-    real, intent(inout), allocatable :: wind_speed(:), air_pressure(:), air_temp(:), &
-                                           dew(:), water_temp(:), wave_height(:), wave_period(:)
+    real, intent(inout), allocatable :: wind_speed(:)
     integer :: fileunit
     integer :: n, nm
-
+    
+    !! get number of records
     nm = num_records(filename)
     if (allocated(time)) deallocate(time)
+    
+    !! Only time and wind_speed for now.
     allocate(character(20)::time(nm))
-
     call alloc(wind_speed, nm)
-    call alloc(air_pressure, nm)
-    call alloc(air_temp, nm)
-    call alloc(dew, nm)
-    call alloc(water_temp, nm)
-    call alloc(wave_height, nm)
-    call alloc(wave_period, nm)
-
-    len = nm
+    
+    !! Open file and read line by line. Only taking the first two elements.
+    !! By doing this, fortran discards any other element beyond the second one
     open(newunit=fileunit, file=filename)
     do n = 1, nm
-      read(fileunit, fmt=*, end=100) time(n), wind_speed(n), air_pressure(n), &
-                                   air_temp(n), dew(n), water_temp(n), wave_height(n), &
-                                   wave_period(n)
+      read(fileunit, fmt=*, end=100) time(n), wind_speed(n)
     end do
-
     100 close(fileunit)
     write(*,*) "reading finished"
 
   endsubroutine readData
+
+  pure function denan(array)
+  use ieee_arithmetic, only: ieee_is_nan
+  real, allocatable, intent(in):: array(:)
+  real, allocatable :: denan(:)
+  !! second argument of pack is an array
+  !! ieee_is_nan return True is Nan
+  denan = pack(array, .not. ieee_is_nan(array))
+
+  end function denan
+
 end module ChapterSeven

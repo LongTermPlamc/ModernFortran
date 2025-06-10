@@ -1,36 +1,37 @@
 program main
-  use ChapterSeven, only: readData
-  use ChapterFive, only: alloc, myfree
-  use pyplot_module
+  use ieee_arithmetic, only: ieee_is_nan
+  use ChapterSeven, only: readData, denan
+  use ChapterFive, only: alloc, myfree, average
   
   implicit none
-  type(pyplot) :: plt
   character(40) :: filename
+  character(5), allocatable:: ids(:)
   real, allocatable :: x(:) 
   character(len=20), allocatable :: time(:)
-  real, allocatable :: wind_speed(:), air_pressure(:), air_temp(:), &
-                       dew(:), water_temp(:), wave_height(:), wave_period(:)
+  real, allocatable :: wind_speed(:)
+  real, allocatable :: max_wind(:), mean_wind(:) 
   integer :: len, i
-  filename = ".\\data\\buoy_42001.csv"
+  
+  ids = ['42001','42002','42003','42020','42035','42036','42039','42040','42055']
+  allocate(max_wind(size(ids)), mean_wind(size(ids)))
 
-  write(*,*) filename
-  call readData(trim(filename), len, time, wind_speed, air_pressure, air_temp, dew, water_temp, wave_height, wave_period)
 
-  write(*,*) len
-  allocate(x(len))
-  x=[(real(i), i=1, len)]
+  do i =1, size(ids)
+    filename = ".\\data\\buoy_"//trim(ids(i))//".csv"
+    call readData(filename, time, wind_speed)
+    wind_speed= denan(wind_speed)
+    max_wind(i) = maxval(wind_speed)
+    mean_wind(i) = average(wind_speed)
+  end do
 
-  !! big limitant, As this is writing a python script, one cannot plot all points.
-  call plt%initialize(grid=.true., xlabel="index", title="TestPlot", legend=.true.)
-  call plt%add_plot(x(96694:97436), wind_speed(96694:97436), label="windSpeed", linestyle="b-o", markersize=5,linewidth=2)
-  call plt%savefig("windspeed.png", pyfile="windSpeed.py")
+  !! here I use functions as maxval, minval, maxloc, minloc 
+  !! to check min and max values in the max and mean_wind arrays
 
-  call myfree(wind_speed)
-  call myfree(air_pressure)
-  call myfree(air_temp)
-  call myfree(dew)
-  call myfree(water_temp)
-  call myfree(wave_height)
-  call myfree(wave_period)
+  write(*,*) "Max wind speed ", maxval(max_wind)," found at station "&
+             ,ids(maxloc(max_wind)),"."
+  write(*,*) "Max mean wind speed ", maxval(mean_wind)," found at station "&
+             ,ids(maxloc(mean_wind)),"."
+  write(*,*) "Min mean wind speed ", minval(mean_wind)," found at station "&
+             ,ids(minloc(mean_wind)),"."
   
 end program main
