@@ -1,0 +1,3 @@
+[submodule "tcp-client-server"]
+	path = tcp-client-server
+	url = https://github.com/sustrik/libdill
