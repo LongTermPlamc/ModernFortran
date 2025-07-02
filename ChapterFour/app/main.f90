@@ -1,7 +1,9 @@
 program coldFront
   use iso_fortran_env, only: int32, real32
-  use modDiff, only: diff => diffCentered
-  use modInitial, only: setGaussian
+  !use modDiff, only: diff => diffCentered
+  !use modInitial, only: setGaussian
+  use mod_initial, only: setGaussian
+  use mod_diff, only: diff => diffCentered
   implicit none
 
   integer(int32) :: n
@@ -22,10 +24,13 @@ program coldFront
   call setGaussian(h, icenter, decay)
   u = 0
 
+  !print*, h
+
   print *, 0, h
   timeloop: do n=1, timeSteps
     u = u - (u * diff(u)+ g * diff(h)) / dx * dt
     h = h - diff(u * (hmean + h)) / dx * dt
+    !h = h - c * diff(h) / dx * dt
     print *, n, h
   end do timeloop
 

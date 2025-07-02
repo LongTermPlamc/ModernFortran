@@ -7,6 +7,7 @@
 *.mod
 stock-prices
 *.csv
+*.dat
 
 ChapterSeven/weather-buoys
 ModernFortran.code-workspace
