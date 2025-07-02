@@ -1,6 +1,9 @@
 program stockGain
-  use ChapterFive
-
+  !use ChapterFive
+  use mod_io
+  use mod_arrays
+  use mod_io
+  use mod_statistics
   implicit none
   character(len=4), allocatable :: symbols(:)
   character(len=100) :: filename
@@ -15,7 +18,7 @@ program stockGain
 
   do n = 1, size(symbols)
 
-    filename = "./data/" // trim(symbols(n)) //".csv"
+    filename = "./myData/" // trim(symbols(n)) //".csv"
 
     call readStock(filename, time, open, high, low, close, adjclose, volume)
     adjclose = reverse(adjclose)

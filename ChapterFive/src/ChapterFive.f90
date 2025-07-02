@@ -96,17 +96,13 @@ contains
   end function reverse
 
   pure real function average(array)
-  
-  real, intent(in):: array(:)
-
-  average = sum(array)/size(array)
-
+    real, intent(in):: array(:)
+    average = sum(array)/size(array)
   end function average
 
   pure real function std(array)
-  real, intent(in) :: array(:)
-
-  std = sqrt(average((array-average(array))**2))
+    real, intent(in) :: array(:)
+    std = sqrt(average((array-average(array))**2))
   end function std
 
   function movingAverage(array, window)
