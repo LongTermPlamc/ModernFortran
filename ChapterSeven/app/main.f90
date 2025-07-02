@@ -1,8 +1,13 @@
 program main
-  use ieee_arithmetic, only: ieee_is_nan
-  use ChapterSeven, only: readData, denan
-  use ChapterFive, only: alloc, myfree, average
-  
+  !use ieee_arithmetic, only: ieee_is_nan
+  use ieee_arithmetic, only: ieee_value, ieee_quiet_nan
+  !use ChapterSeven, only: readData, denan
+  !use ChapterFive, only: alloc, myfree, average
+  use mod_io
+  use mod_arrays
+  use mod_parallel
+  use mod_statistics
+ 
   implicit none
   character(40) :: filename
   character(5), allocatable:: ids(:)
@@ -17,7 +22,7 @@ program main
 
 
   do i =1, size(ids)
-    filename = ".\\data\\buoy_"//trim(ids(i))//".csv"
+    filename = "./data/buoy_"//trim(ids(i))//".csv"
     call readData(filename, time, wind_speed)
     wind_speed= denan(wind_speed)
     max_wind(i) = maxval(wind_speed)

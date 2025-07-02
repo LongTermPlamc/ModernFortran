@@ -1,81 +1,51 @@
-# Compiler and Flags
-FC = gfortran
-FFLAGS = -Wall -O2 -fcoarray=lib
-LIBDIR = /usr/lib/x86_64-linux-gnu/open-coarrays/openmpi/lib
-LIBS = -lcaf_mpi
+FC = caf
 
-# Directories
-SRC_DIR = src
-APP_DIR = app
-BUILD_DIR = build/makeFiles
+# declare respective directories.
+CHAPTER_DIR := .
+## directory with main app
+APP_DIR := $(CHAPTER_DIR)/app
+## directory with lib files
+LIB_DIR := $(CHAPTER_DIR)/../../modernLib/src
+## directory with libs
+BUILD_DIR := $(CHAPTER_DIR)/build
 
-# Source Files
-MODULE_SOURCES = $(wildcard $(SRC_DIR)/*.f90)
-MAIN_SRC = $(APP_DIR)/main.f90
-HELLO_SRC = $(APP_DIR)/hello.f90
-COARR_SRC = $(APP_DIR)/coarrayAndParallel.f90
+$(shell mkdir -p $(BUILD_DIR))
 
-# Object Files
-MODULE_OBJS = $(patsubst $(SRC_DIR)/%.f90,$(BUILD_DIR)/%.o,$(MODULE_SOURCES))
-MAIN_OBJ = $(BUILD_DIR)/main.o
-HELLO_OBJ = $(BUILD_DIR)/hello.o
-COARR_OBJ = $(BUILD_DIR)/coarrayAndParallel.o
+# source files
+## source for library
+LIB_SRC := $(wildcard $(LIB_DIR)/*.f90)
+## source for app
+APP_SRC := $(wildcard $(APP_DIR)/tsunami.f90)
 
-# Executables
-MAIN_EXE = main
-HELLO_EXE = hello
-COARR_EXE = coarrayAndParallel
+# object files
+LIB_OBJ := $(patsubst $(LIB_DIR)/%.f90, $(BUILD_DIR)/lib_%.o, $(LIB_SRC))
+APP_OBJ := $(patsubst $(APP_DIR)/%.f90, $(BUILD_DIR)/app_%.o, $(APP_SRC))
 
-# Module path flags
-MOD_FLAGS = -I$(BUILD_DIR) -J$(BUILD_DIR)
+$(info [LIB_SRC] = $(LIB_SRC))
+$(info [LIB_OBJ] = $(LIB_OBJ))
+$(info [APP_SRC] = $(APP_SRC))
+$(info [APP_OBJ] = $(APP_OBJ))
 
-.PHONY: all clean run-main run-hello
+# executable
+EXE := main.exe
 
-# Default target
-all: $(MAIN_EXE) $(HELLO_EXE) $(COARR_EXE)
+# compilation rules
 
-# Ensure build directory exists
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+## Default
+### Target: dependencies
+all: $(EXE)
 
-# Compile modules
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.f90 | $(BUILD_DIR)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -c $< -o $@
+### Linking rules
+$(EXE): $(LIB_OBJ) $(APP_OBJ)
+	$(FC) -o $@ $^
 
-# Compile main program
-$(MAIN_OBJ): $(MAIN_SRC) | $(BUILD_DIR)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -c $< -o $@
+$(BUILD_DIR)/lib_%.o: $(LIB_DIR)/%.f90
+	$(FC) -c -J $(BUILD_DIR) -o $@ $<
 
-# Compile hello program
-$(HELLO_OBJ): $(HELLO_SRC) | $(BUILD_DIR)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -c $< -o $@
+$(BUILD_DIR)/app_%.o: $(APP_DIR)/%.f90
+	$(FC) -c -I $(BUILD_DIR) -J $(BUILD_DIR) -o $@ $<
 
-# Compile coarrayAndParallel program
-$(COARR_OBJ): $(COARR_SRC) | $(BUILD_DIR)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -c $< -o $@
-
-# Link main
-$(MAIN_EXE): $(MODULE_OBJS) $(MAIN_OBJ)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -L$(LIBDIR) -o $@ $^ $(LIBS)
-
-# Link hello
-$(HELLO_EXE): $(MODULE_OBJS) $(HELLO_OBJ)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -L$(LIBDIR) -o $@ $^ $(LIBS)
-
-# Link coarrayAndParallel program
-$(COARR_EXE): $(MODULE_OBJS) $(COARR_OBJ)
-	$(FC) $(FFLAGS) $(MOD_FLAGS) -L$(LIBDIR) -o $@ $^ $(LIBS)
-
-# Run targets
-run-main: $(MAIN_EXE)
-	cafrun -n 4 ./$(MAIN_EXE)
-
-run-hello: $(HELLO_EXE)
-	cafrun -n 4 ./$(HELLO_EXE)
-
-run-coarr: $(COARR_EXE)
-	cafrun -n 4 ./$(COARR_EXE)
-
-# Cleanup
 clean:
-	rm -rf $(MAIN_EXE) $(HELLO_EXE) $(COARR_EXE) $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) *.exe *.mod
+
+.PHONY: all clean
